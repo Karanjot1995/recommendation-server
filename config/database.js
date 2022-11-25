@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 
-const { MONGO_URI } = process.env;
-
+const MONGO_URI =  "mongodb+srv://root:root@cluster0.pgzm5ma.mongodb.net/recommendation?retryWrites=true&w=majority";
 exports.connect = () => {
   // Connecting to the database
   mongoose
