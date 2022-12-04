@@ -37,6 +37,7 @@ app.post("/api/sign-up", async (req, res) => {
       name,
       liked: [],
       genres: {},
+      shelf: {},
       password: encryptedPassword,
     });
 
@@ -79,6 +80,7 @@ app.post("/api/login", async (req, res) => {
       );
       // save user token
       user.token = token;
+      // user.shelf = {};
       // user
       res.send({'access_token':token, 'user':user});
     }
@@ -133,6 +135,11 @@ app.get('/api/liked-books', async (req,res)=>{
   res.send(liked)
 })
 
+app.get('/api/logout', async (req,res)=>{
+  const user = {token:''};
+  res.send(user)
+})
+
 app.post('/api/like', auth, async (req,res)=>{
   const {id, liked} = req.body
 
@@ -168,6 +175,71 @@ app.post('/api/like', auth, async (req,res)=>{
   res.send({user})
 
 })
+
+
+app.post('/api/shelf', auth, async (req,res)=>{
+  let body = req.body
+  let status = Object.keys(body)[0]
+  const user = await User.findOne({ email:req.user.email });
+  let book_id = body[status];
+
+  if(user){
+    let shelf = user.shelf
+    if(!status && shelf[book_id]){
+      delete shelf[book_id]  
+    }else{
+      shelf[String(book_id)] = status
+    }
+    let updated_user = await User.findOneAndUpdate({email: req.user.email}, {$set: { shelf: shelf}}, {new: true}, (err, u) => {
+      if (err) {
+          console.log("Something wrong when updating data!");
+      }
+    });
+    console.log(updated_user)
+    res.send({user:updated_user})
+  }
+  // await User.findOne({ email: req.user.email}, (err, user) =>{
+  //   if (err) throw err 
+  //   if(user){
+  //     console.log(user)
+  //     let shelf = user.shelf
+  //     shelf[book_id] = status
+  //     user.shelf = shelf
+  //     // console.log(user)
+  //   }
+  //   user.save()
+  // });
+ 
+
+})
+
+app.get('/api/shelf', auth, async (req,res)=>{
+  const user = await User.findOne({ email:req.user.email });
+  let all_books = []
+  let shelf_books = {};
+  if(user){
+    all_books = await books;
+    all_books = all_books.filter(b=>{
+      if(Object.keys(user.shelf).indexOf(b.id)>-1){
+        return b
+      }
+    })
+    all_books.map(b=>{
+      console.log(user.shelf[b.id])
+      if(shelf_books[user.shelf[b.id]]){
+        shelf_books[user.shelf[b.id]].push(b)
+      }else{
+        shelf_books[user.shelf[b.id]] = [b]
+      }
+    })
+  }
+
+  res.send({books:all_books, shelf_books})
+
+})
+
+
+
 
 app.get("/", (req, res) => {
   res.send("Hello 🙌 ");

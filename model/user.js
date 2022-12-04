@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   password: { type: String },
   liked: {type: Array},
+  shelf: {type: Object},
   genres: {type: Object},
   token: { type: String },
 });
